@@ -1,6 +1,8 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import "./auth";
+import passport from "passport";
 
 dotenv.config();
 
@@ -19,7 +21,9 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");
 });
 
-app.post("/login", (req: Request, res: Response) => {});
+app.get("/auth/google", (req: Request, res: Response) => {
+  passport.authenticate("google", { scope: ["profile", "email"] });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
