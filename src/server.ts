@@ -21,9 +21,10 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");
 });
 
-app.get("/auth/google", (req: Request, res: Response) => {
-  passport.authenticate("google", { scope: ["profile", "email"] });
-});
+app.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile"] })
+);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
