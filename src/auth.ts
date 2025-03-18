@@ -1,4 +1,3 @@
-import { dot } from "node:test/reporters";
 import passport from "passport";
 import { Profile, VerifyCallback } from "passport-google-oauth20";
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
@@ -10,17 +9,19 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000",
+      callbackURL: `${process.env.BACKEND_URL}/auth/google/callback`,
+      passReqToCallback: true, // This requires the req parameter in callback
     },
     function (
+      req: any, // Add the request parameter
       accessToken: string,
       refreshToken: string,
       profile: Profile,
-      cb: VerifyCallback
+      done: VerifyCallback
     ) {
-      //   User.findOrCreate({ googleId: profile.id }, function (err, user) {
-      return cb(null, profile);
-      //  });
+      // User.findOrCreate({ googleId: profile.id }, function (err, user) {
+      return done(null, profile);
+      // });
     }
   )
 );
