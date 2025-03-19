@@ -1,7 +1,7 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import "./auth";
+import "./controllers/auth";
 import passport from "passport";
 import session from "express-session";
 
