@@ -4,7 +4,7 @@ import cors from "cors";
 import "./auth";
 import passport from "passport";
 import session from "express-session";
-import { storage, uploadsDir, upload } from "./multerconf";
+import { storage, uploadsDir, upload } from "./config/multerconf";
 
 dotenv.config();
 
