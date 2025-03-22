@@ -2,8 +2,8 @@ import dbConnection from "../config/db-connection";
 
 export interface User {
   id: number;
-  username: string;
-  usersurname: string;
+  userName: string;
+  userSurname: string;
   email: string;
 }
 
@@ -11,7 +11,7 @@ export async function createUser(user: User): Promise<void> {
   const connection = await dbConnection.getConnection();
   await connection.execute(
     "INSERT INTO Users (username, usersurname, email) VALUES (?, ?, ?)",
-    [user.username, user.usersurname, user.email]
+    [user.userName, user.userSurname, user.email]
   );
   connection.release();
 }
