@@ -1,4 +1,4 @@
-import usersDbConnection from "../config/storage-users-db";
+import dbConnection from "../config/db-connection";
 
 export interface User {
   id: number;
@@ -8,7 +8,7 @@ export interface User {
 }
 
 export async function createUser(user: User): Promise<void> {
-  const connection = await usersDbConnection.getConnection();
+  const connection = await dbConnection.getConnection();
   await connection.execute(
     "INSERT INTO Users (username, usersurname, email) VALUES (?, ?, ?)",
     [user.username, user.usersurname, user.email]
@@ -17,7 +17,7 @@ export async function createUser(user: User): Promise<void> {
 }
 
 export async function getUserByEmail(email: string): Promise<User | null> {
-  const connection = await usersDbConnection.getConnection();
+  const connection = await dbConnection.getConnection();
   try {
     const [rows]: [any[], any] = await connection.execute(
       "SELECT * FROM Users WHERE email = ?",
