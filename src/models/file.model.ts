@@ -1,4 +1,4 @@
-import  dbConnection  from '../config/database';
+import  dbConnection  from '../config/db-connection';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 export interface File {
