@@ -1,6 +1,6 @@
 -- @block
 CREATE TABLE users(
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id VARCHAR(36) DEFAULT (UUID()) PRIMARY KEY,
     google_id VARCHAR(255) NOT NULL,
     username VARCHAR(255) NOT NULL,
     usersurname VARCHAR(255) NOT NULL,
