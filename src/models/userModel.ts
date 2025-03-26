@@ -1,19 +1,20 @@
 import dbConnection from "../config/db-connection";
 
 export interface User {
-  id?: number;
+  id?: string;
   googleId?: string;
-  userName: string;
-  userSurname: string;
+  username: string;
+  usersurname: string;
   email: string;
+  photo?: string;
 }
 
 export async function createUser(user: User): Promise<void> {
   const connection = await dbConnection.getConnection();
   try {
     await connection.execute(
-      "INSERT INTO Users (google_id, username, usersurname, email) VALUES (?, ?, ?, ?)",
-      [user.googleId, user.userName, user.userSurname, user.email]
+      "INSERT INTO Users (googleId, username, usersurname, email, photo) VALUES (?, ?, ?, ?, ?)",
+      [user.googleId, user.username, user.usersurname, user.email, user.photo]
     );
   } finally {
     connection.release();
@@ -43,8 +44,25 @@ export async function getUserByGoogleId(
   const connection = await dbConnection.getConnection();
   try {
     const [rows]: [any[], any] = await connection.execute(
-      "SELECT * FROM Users WHERE google_id = ?",
+      "SELECT * FROM Users WHERE googleId = ?",
       [googleId]
+    );
+
+    if (Array.isArray(rows) && rows.length === 0) {
+      return null;
+    }
+    return rows[0] as User;
+  } finally {
+    connection.release();
+  }
+}
+
+export async function getUserById(id: string): Promise<User | null> {
+  const connection = await dbConnection.getConnection();
+  try {
+    const [rows]: [any[], any] = await connection.execute(
+      "SELECT * FROM Users WHERE id = ?",
+      [id]
     );
 
     if (Array.isArray(rows) && rows.length === 0) {

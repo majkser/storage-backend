@@ -7,6 +7,7 @@ import {
   createUser,
   getUserByEmail,
   getUserByGoogleId,
+  getUserById,
   User,
 } from "../models/userModel";
 
@@ -25,34 +26,45 @@ passport.use(
       profile: Profile,
       done: VerifyCallback
     ) {
-      const googleId = profile.id;
-      const email = profile.emails![0].value;
+      try {
+        const googleId = profile.id;
+        const email = profile.emails![0].value;
 
-      let userByGoogleId: User | null = await getUserByGoogleId(googleId);
-      let userByEmail: User | null = await getUserByEmail(email);
+        let userByGoogleId: User | null = await getUserByGoogleId(googleId);
+        let userByEmail: User | null = await getUserByEmail(email);
 
-      if (!userByGoogleId && !userByEmail) {
-        const newUser: User = {
-          googleId: googleId,
-          userName: profile.name!.givenName,
-          userSurname: profile.name!.familyName,
-          email: email,
-        };
+        if (!userByGoogleId && !userByEmail) {
+          const newUser: User = {
+            googleId: googleId,
+            username: profile.name!.givenName,
+            usersurname: profile.name!.familyName,
+            photo: profile.photos![0].value,
+            email: email,
+          };
 
-        await createUser(newUser);
+          await createUser(newUser);
+        }
+
+        const user = await getUserByGoogleId(googleId);
+
+        return done(null, user as User);
+      } catch (error) {
+        return done(error as Error, undefined);
       }
-
-      // User.findOrCreate({ googleId: profile.id }, function (err, user) {
-      return done(null, profile);
-      // });
     }
   )
 );
 
-passport.serializeUser(function (user: Express.User, done) {
-  done(null, user);
+passport.serializeUser(function (user: any, done) {
+  done(null, user.id);
 });
 
-passport.deserializeUser(function (user: Express.User, done) {
-  done(null, user);
+passport.deserializeUser(function (id: string, done) {
+  getUserById(id)
+    .then((user) => {
+      done(null, user);
+    })
+    .catch((error) => {
+      done(error, undefined);
+    });
 });
