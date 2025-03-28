@@ -45,7 +45,13 @@ app.get("/", (req: Request, res: Response) => {
 app.get("/api/user", (req: Request, res: Response) => {
   if (req.isAuthenticated()) {
     const { id, username, email, photo } = req.user as User;
-    res.json({ id, username, email, photo });
+    res.json({
+      id,
+      username,
+      email,
+      photo,
+      isAdmin: id === process.env.ADMIN_ID,
+    });
   } else {
     res.status(401).json({ message: "Unauthorized" });
   }
@@ -74,7 +80,7 @@ app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
     failureRedirect: `${process.env.FRONTEND_URL}/login`,
-    successRedirect: `${process.env.FRONTEND_URL}`,
+    successRedirect: `${process.env.FRONTEND_URL}/dashboard`,
   })
 );
 
