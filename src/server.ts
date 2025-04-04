@@ -7,6 +7,7 @@ import session from "express-session";
 import { storage, uploadsDir, upload } from "./config/multerconf";
 import { User } from "./models/userModel";
 import { error } from "console";
+import fileRoutes from "./routes/file.routes";
 
 dotenv.config();
 
@@ -78,35 +79,9 @@ app.get(
   })
 );
 
-// app.post(
-//   "/api/files/upload",
-//   upload.single("file"),
-//   async (req: Request, res: Response) => {
-//     if (!req.file) {
-//       res.status(400).json({ message: "No file uploaded" });
-//       return;
-//     }
 
-//     try {
-//       // database code
+app.use('api/files', fileRoutes)
 
-//       res.status(200).json({
-//         message: "File uploaded successfully",
-//         file: {
-//           filename: req.file.filename,
-//           originalName: req.file.originalname,
-//           size: req.file.size,
-//           mimetype: req.file.mimetype,
-//         },
-//       });
-//     } catch (err) {
-//       console.error("Error uploading file", err);
-//       res.status(500).json({ message: "Error uploading file" });
-//     }
-//   }
-// );
-
-// todd: multiple file upload
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
