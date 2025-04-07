@@ -8,7 +8,7 @@ export interface File {
     filePath: string;
     size: number;
     mimetype: string;
-    userId: number;
+    userId: string;
     parentFolderId?: number | null;
     isPublic: boolean;
     createdAt: Date;
@@ -42,7 +42,7 @@ export async function findById(id: number): Promise<File | null> {
     }
 }
 
-export async function findByUserId(userId: number, parentFolderId: number | null): Promise<File[]> {
+export async function findByUserId(userId: string, parentFolderId: number | null): Promise<File[]> {
     const connection = await dbConnection.getConnection();
     try {
         let query = 'SELECT * FROM files WHERE user_id = ?';

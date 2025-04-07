@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { File } from '../models/file.model';
 import fs from 'fs';
-import path from 'path';
 import { createFile, findById, findByUserId, deleteFile } from '../models/file.model';
 
 export class FileController {
@@ -28,7 +27,7 @@ export class FileController {
                 mimetype: req.file.mimetype,
                 userId: userId,
                 parentFolderId: parentFolderId,
-                isPublic: req.body.isPublic === 'true',
+                isPublic: req.body.isPublic == true,
                 createdAt: new Date(),
             };
 
@@ -38,6 +37,7 @@ export class FileController {
                 message: 'File uploaded successfully',
                 file: {
                     fileName: fileData.fileName,
+                    id: fileId,
                 }
             });
         } catch (err) {

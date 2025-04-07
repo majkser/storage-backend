@@ -4,9 +4,7 @@ import cors from "cors";
 import "./controllers/auth";
 import passport from "passport";
 import session from "express-session";
-import { storage, uploadsDir, upload } from "./config/multerconf";
 import { User } from "./models/userModel";
-import { error } from "console";
 import fileRoutes from "./routes/file.routes";
 
 dotenv.config();
