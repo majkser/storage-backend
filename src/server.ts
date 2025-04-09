@@ -83,9 +83,7 @@ app.get(
   })
 );
 
-
-app.use('api/files', fileRoutes)
-
+app.use("/api/files", fileRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
