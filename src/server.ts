@@ -57,18 +57,6 @@ app.get("/api/user", (req: Request, res: Response) => {
   }
 });
 
-app.post("/api/logout", (req: Request, res: Response) => {
-  req.logout((error) => {
-    if (error) {
-      return res.status(500).json({ message: "Logout failed" });
-    }
-  });
-
-  res.clearCookie("connect.sid");
-
-  res.json({ message: "Logout successful" });
-});
-
 app.use("/api/auth", authRoutes);
 
 app.use("/api/files", fileRoutes);
