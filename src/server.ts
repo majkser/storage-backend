@@ -6,6 +6,7 @@ import passport from "passport";
 import session from "express-session";
 import { User } from "./models/userModel";
 import fileRoutes from "./routes/file.routes";
+import authRoutes from "./routes/authRoutes";
 
 dotenv.config();
 
@@ -68,20 +69,7 @@ app.post("/api/logout", (req: Request, res: Response) => {
   res.json({ message: "Logout successful" });
 });
 
-app.get(
-  "/auth/google",
-  passport.authenticate("google", {
-    scope: ["email", "profile"],
-  })
-);
-
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: `${process.env.FRONTEND_URL}/login`,
-    successRedirect: `${process.env.FRONTEND_URL}/dashboard`,
-  })
-);
+app.use("/api/auth", authRoutes);
 
 app.use("/api/files", fileRoutes);
 
