@@ -9,6 +9,7 @@ CREATE TABLE users(
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- @block
 CREATE TABLE files (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     filename VARCHAR(255) NOT NULL,
@@ -26,12 +27,14 @@ CREATE TABLE files (
 
 );
 
-
 -- @block
 DROP TABLE users;
 
 -- @block
 SELECT * FROM users;
+
+-- @block
+SELECT * FROM files;
 
 -- @block
 DELETE FROM users WHERE id = 6;
