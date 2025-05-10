@@ -24,3 +24,12 @@ CREATE TABLE files (
     FOREIGN KEY (user_id) REFERENCES users(id)
 
 );
+
+CREATE TABLE links (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    file_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (file_id) REFERENCES files(id)
+);
