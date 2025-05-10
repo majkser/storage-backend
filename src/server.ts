@@ -7,7 +7,8 @@ import session from "express-session";
 import { User } from "./models/userModel";
 import fileRoutes from "./routes/file.routes";
 import authRoutes from "./routes/authRoutes";
-import shareRoutes from "./routes/shareRoutes";
+import linkRoutes from "./routes/linkRoutes";
+import { link } from "fs";
 
 dotenv.config();
 
@@ -63,7 +64,7 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/files", fileRoutes);
 
-app.use("/api/share", shareRoutes);
+app.use("/api/link", linkRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
