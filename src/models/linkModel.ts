@@ -32,3 +32,19 @@ export async function getLinkByToken(token: string): Promise<Link | null> {
     connection.release();
   }
 }
+
+export async function getLinkByFileId(fileId: number): Promise<Link | null> {
+  const connection = await dbConnection.getConnection();
+  try {
+    const [rows]: [any[], any] = await connection.execute(
+      "SELECT * FROM links WHERE file_id = ?",
+      [fileId]
+    );
+    if (rows.length === 0) {
+      return null;
+    }
+    return rows[0] as Link;
+  } finally {
+    connection.release();
+  }
+}
