@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import { generateLink, getFileByLink } from "../controllers/linkController";
 
 const router = express.Router();
