@@ -1,15 +1,14 @@
 import { createLink, getLinkByToken } from "../models/linkModel";
-import { v4 as uuidv4 } from "uuid";
 import { Request, Response } from "express";
 import { Link } from "../models/linkModel";
 
 export async function generateLink(req: Request, res: Response) {
   const fileId = await req.body.fileId;
-
+  const token = req.body.token;
   //const fileId = 1;
 
   const link: Link = {
-    token: uuidv4(),
+    token: token,
     fileId: fileId,
   };
 
