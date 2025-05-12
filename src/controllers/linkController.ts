@@ -8,7 +8,7 @@ import { Link } from "../models/linkModel";
 import { v4 as uuidv4 } from "uuid";
 
 export async function generateLink(req: Request, res: Response) {
-  const fileId = req.body.fileId;
+  const fileId: number = parseInt(req.body.fileId);
 
   try {
     const existingLink = await getLinkByFileId(fileId);
