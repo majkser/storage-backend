@@ -27,7 +27,10 @@ export async function getLinkByToken(token: string): Promise<Link | null> {
     if (rows.length === 0) {
       return null;
     }
-    return rows[0] as Link;
+    return {
+      token: rows[0].token,
+      fileId: rows[0].file_id,
+    } as Link;
   } finally {
     connection.release();
   }
@@ -43,7 +46,10 @@ export async function getLinkByFileId(fileId: number): Promise<Link | null> {
     if (rows.length === 0) {
       return null;
     }
-    return rows[0] as Link;
+    return {
+      token: rows[0].token,
+      fileId: rows[0].file_id,
+    } as Link;
   } finally {
     connection.release();
   }

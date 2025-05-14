@@ -44,7 +44,7 @@ export async function getFileByLink(req: Request, res: Response) {
     if (!link) {
       res.status(404).json({ error: "Link not found" });
     } else {
-      res.json(link);
+      res.json({ fileId: link.fileId });
     }
   } catch (error) {
     console.error("Error fetching link:", error);
@@ -52,18 +52,18 @@ export async function getFileByLink(req: Request, res: Response) {
   }
 }
 
-export async function getLink(req: Request, res: Response) {
-  const fileId = Number(req.params.fileId);
+// export async function getLink(req: Request, res: Response) {
+//   const fileId = Number(req.params.fileId);
 
-  try {
-    const link = await getLinkByFileId(fileId);
-    if (!link) {
-      res.status(404).json({ error: "Link not found" });
-    } else {
-      res.json(link.token);
-    }
-  } catch (error) {
-    console.error("Error fetching link:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-}
+//   try {
+//     const link = await getLinkByFileId(fileId);
+//     if (!link) {
+//       res.status(404).json({ error: "Link not found" });
+//     } else {
+//       res.json(link.token);
+//     }
+//   } catch (error) {
+//     console.error("Error fetching link:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// }
