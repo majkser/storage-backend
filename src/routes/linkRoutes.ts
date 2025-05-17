@@ -3,6 +3,8 @@ import { generateLink, getFileByLink } from "../controllers/linkController";
 import { body, param } from "express-validator";
 import validateRequest from "../middlewares/requestValidator.middleware";
 import fileExistanceValidator from "../middlewares/fileExistanceValidator.middleware";
+import isAuthenticated from "../middlewares/isAuthenticated.middleware";
+import isAdmin from "../middlewares/isAdmin.middleware";
 
 const router = express.Router();
 
@@ -10,6 +12,8 @@ const router = express.Router();
 
 router.post(
   "/generate-link",
+  isAuthenticated,
+  isAdmin,
   body("fileId")
     .toInt()
     .notEmpty()
