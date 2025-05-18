@@ -60,6 +60,14 @@ app.get("/api/user", (req: Request, res: Response) => {
   }
 });
 
+app.get("/api/user/validate-session", (req: Request, res: Response) => {
+  if (req.user) {
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(401);
+  }
+});
+
 app.use("/api/auth", authRoutes);
 
 app.use("/api/files", fileRoutes);
