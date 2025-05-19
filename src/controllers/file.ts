@@ -5,8 +5,10 @@ import { createFile, findById, findByUserId, deleteFile } from '../models/file.m
 
 export class FileController {
     static async uploadFile(req: Request, res: Response): Promise<void> {
-        if (!req.file) {
-            res.status(400).json({ error: 'No file uploaded' });
+        const hasFiles = (req.files && (Array.isArray(req.files) ? req.files.length > 0 : true)) || req.file;
+        
+        if (!hasFiles) {
+            res.status(400).json({ error: 'No files uploaded' });
             return;
         }
         
@@ -17,35 +19,59 @@ export class FileController {
             }
             const userId = (req.user as any).id;
             const parentFolderId = req.body.folderId ? parseInt(req.body.folderId) : null;
-
-            const fileData: File = {
-                id: 0, // This will be auto-incremented by the database
-                fileName: req.file.filename,
-                originalName: req.file.originalname,
-                filePath: req.file.path,
-                size: req.file.size,
-                mimetype: req.file.mimetype,
-                userId: userId,
-                parentFolderId: parentFolderId,
-                isPublic: req.body.isPublic == true,
-                createdAt: new Date(),
-            };
-
-            const fileId = await createFile(fileData);
-
-            res.status(201).json({
-                message: 'File uploaded successfully',
-                file: {
-                    fileName: fileData.fileName,
-                    id: fileId,
+    
+            const uploadedFiles = [];
+            
+            // Safely handle different multer configurations (single or array)
+            let filesToProcess: Express.Multer.File[] = [];
+            
+            if (req.files) {
+                if (Array.isArray(req.files)) {
+                    filesToProcess = req.files;
+                } else {
+                    // Handle case where req.files is an object with arrays (fieldname → files)
+                    Object.keys(req.files).forEach(key => {
+                        const fileArray = (req.files as Record<string, Express.Multer.File[]>)[key];
+                        filesToProcess = filesToProcess.concat(fileArray);
+                    });
                 }
+            } else if (req.file) {
+                filesToProcess = [req.file];
+            }
+            
+            // Process each file
+            for (const file of filesToProcess) {
+                const fileData: File = {
+                    id: 0, // This will be auto-incremented by the database
+                    fileName: file.filename,
+                    originalName: file.originalname,
+                    filePath: file.path,
+                    size: file.size,
+                    mimetype: file.mimetype,
+                    userId: userId,
+                    parentFolderId: parentFolderId,
+                    isPublic: req.body.isPublic === 'true',
+                    createdAt: new Date(),
+                };
+    
+                const fileId = await createFile(fileData);
+                uploadedFiles.push({
+                    id: fileId,
+                    fileName: fileData.fileName,
+                    originalName: fileData.originalName
+                });
+            }
+    
+            res.status(201).json({
+                message: 'Files uploaded successfully',
+                files: uploadedFiles
             });
         } catch (err) {
-            console.error("Error uploading file:", err);
-            res.status(500).json({ error: 'Internal server error while uploading file' });
+            console.error("Error uploading files:", err);
+            res.status(500).json({ error: 'Internal server error while uploading files' });
         }
     }
-
+    
     static async getFiles(req: Request, res: Response): Promise<void> {
         try {
             if (!req.user) {

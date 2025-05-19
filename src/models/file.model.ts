@@ -18,12 +18,28 @@ export interface File {
 export async function createFile(file: File): Promise<number> {
     const connection = await dbConnection.getConnection();
     try {
+
+      const updatedAt = file.updatedAt || null;
+      const parentFolderId = file.parentFolderId === undefined ? null : file.parentFolderId;
+
       const [result] = await connection.execute<ResultSetHeader>(
         "INSERT INTO files (id, filename, original_name, file_path, size, mimetype, user_id, parent_folder_id, is_public, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [file.id, file.fileName, file.originalName, file.filePath, file.size, file.mimetype, file.userId, file.parentFolderId, file.isPublic, file.createdAt, file.updatedAt]
-        );
-        return result.insertId as number;
-    
+        [
+          file.id, 
+          file.fileName, 
+          file.originalName, 
+          file.filePath, 
+          file.size, 
+          file.mimetype, 
+          file.userId, 
+          parentFolderId,  
+          file.isPublic, 
+          file.createdAt, 
+          updatedAt        
+        ]
+      );
+      return result.insertId as number;
+
     } finally {
       connection.release();
     }
@@ -47,14 +63,14 @@ export async function findByUserId(userId: string, parentFolderId: number | null
     try {
         let query = 'SELECT * FROM files WHERE user_id = ?';
         const params: any[] = [userId];
-        
+
         if (parentFolderId === null) {
           query += ' AND parent_folder_id IS NULL';
         } else {
           query += ' AND parent_folder_id = ?';
           params.push(parentFolderId);
         }
-        
+
         const [rows] = await connection.execute<RowDataPacket[]>(query, params);
         return rows as File[];
     } finally {
@@ -69,7 +85,7 @@ export async function deleteFile(id: number): Promise<boolean> {
             "DELETE FROM files WHERE id = ?",
             [id]
         );
-    
+
         return result.affectedRows > 0;
     } finally {
         connection.release();

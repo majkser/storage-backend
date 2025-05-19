@@ -12,7 +12,7 @@ const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
     res.status(401).json({ error: 'Unauthorized' });
 };
 
-router.post('/upload', isAuthenticated, upload.single('file'), FileController.uploadFile);
+router.post('/upload', isAuthenticated, upload.array('file'), FileController.uploadFile);
 router.get('/', isAuthenticated, FileController.getFiles);
 router.get('/:id/download', FileController.downloadFile);
 router.delete('/:id', isAuthenticated, FileController.removeFile);
