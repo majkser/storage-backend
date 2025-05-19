@@ -13,7 +13,7 @@ export async function createUser(user: User): Promise<void> {
   const connection = await dbConnection.getConnection();
   try {
     await connection.execute(
-      "INSERT INTO Users (googleId, username, usersurname, email, photo) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO users (googleId, username, usersurname, email, photo) VALUES (?, ?, ?, ?, ?)",
       [user.googleId, user.username, user.usersurname, user.email, user.photo]
     );
   } finally {
@@ -25,7 +25,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   const connection = await dbConnection.getConnection();
   try {
     const [rows]: [any[], any] = await connection.execute(
-      "SELECT * FROM Users WHERE email = ?",
+      "SELECT * FROM users WHERE email = ?",
       [email]
     );
 
@@ -44,7 +44,7 @@ export async function getUserByGoogleId(
   const connection = await dbConnection.getConnection();
   try {
     const [rows]: [any[], any] = await connection.execute(
-      "SELECT * FROM Users WHERE googleId = ?",
+      "SELECT * FROM users WHERE googleId = ?",
       [googleId]
     );
 
@@ -61,7 +61,7 @@ export async function getUserById(id: string): Promise<User | null> {
   const connection = await dbConnection.getConnection();
   try {
     const [rows]: [any[], any] = await connection.execute(
-      "SELECT * FROM Users WHERE id = ?",
+      "SELECT * FROM users WHERE id = ?",
       [id]
     );
 

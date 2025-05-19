@@ -4,10 +4,11 @@ import cors from "cors";
 import "./controllers/auth";
 import passport from "passport";
 import session from "express-session";
-import { storage, uploadsDir, upload } from "./config/multerconf";
 import { User } from "./models/userModel";
-import { error } from "console";
 import fileRoutes from "./routes/file.routes";
+import authRoutes from "./routes/authRoutes";
+import linkRoutes from "./routes/linkRoutes";
+import { link } from "fs";
 
 dotenv.config();
 
@@ -46,42 +47,32 @@ app.get("/", (req: Request, res: Response) => {
 app.get("/api/user", (req: Request, res: Response) => {
   if (req.isAuthenticated()) {
     const { id, username, email, photo } = req.user as User;
-    res.json({ id, username, email, photo });
+    const adminEmails = (process.env.ADMIN_EMAILS || "").split(",");
+    res.json({
+      id,
+      username,
+      email,
+      photo,
+      isAdmin: adminEmails.includes(email),
+    });
   } else {
     res.status(401).json({ message: "Unauthorized" });
   }
 });
 
-app.post("/api/logout", (req: Request, res: Response) => {
-  req.logout((error) => {
-    if (error) {
-      return res.status(500).json({ message: "Logout failed" });
-    }
-  });
-
-  res.clearCookie("connect.sid");
-
-  res.json({ message: "Logout successful" });
+app.get("/api/user/validate-session", (req: Request, res: Response) => {
+  if (req.user) {
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(401);
+  }
 });
 
-app.get(
-  "/auth/google",
-  passport.authenticate("google", {
-    scope: ["email", "profile"],
-  })
-);
+app.use("/api/auth", authRoutes);
 
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: `${process.env.FRONTEND_URL}/login`,
-    successRedirect: `${process.env.FRONTEND_URL}`,
-  })
-);
+app.use("/api/files", fileRoutes);
 
-
-app.use('api/files', fileRoutes)
-
+app.use("/api/link", linkRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

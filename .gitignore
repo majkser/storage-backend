@@ -49,6 +49,7 @@ coverage/
 *.njsproj
 *.sln
 *.sw?
+*.dockerignore
 
 # OS
 .DS_Store
