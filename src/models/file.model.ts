@@ -78,7 +78,23 @@ export async function findByUserId(
 ): Promise<File[]> {
   const connection = await dbConnection.getConnection();
   try {
-    let query = "SELECT * FROM files WHERE user_id = ?";
+    // convert snake_case to camelCase
+    let query = `
+      SELECT 
+        id,
+        filename AS fileName,
+        original_name AS originalName,
+        file_path AS filePath,
+        size,
+        mimetype,
+        user_id AS userId,
+        parent_folder_id AS parentFolderId,
+        is_public AS isPublic,
+        created_at AS createdAt
+      FROM files 
+      WHERE user_id = ?
+    `;
+    
     const params: any[] = [userId];
 
     if (parentFolderId === null) {
