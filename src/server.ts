@@ -8,7 +8,7 @@ import { User } from "./models/userModel";
 import fileRoutes from "./routes/file.routes";
 import authRoutes from "./routes/authRoutes";
 import linkRoutes from "./routes/linkRoutes";
-import { link } from "fs";
+import { getUserIdByEmail } from "./controllers/userController";
 
 dotenv.config();
 
@@ -65,6 +65,19 @@ app.get("/api/user/validate-session", (req: Request, res: Response) => {
     res.sendStatus(200);
   } else {
     res.sendStatus(401);
+  }
+});
+
+app.get("/api/user/email/:email", async (req: Request, res: Response) => {
+  try {
+    const userId = await getUserIdByEmail(req.params.email);
+    if (userId) {
+      res.json({ userId });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving user ID" });
   }
 });
 
