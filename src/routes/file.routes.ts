@@ -2,21 +2,15 @@ import express from 'express';
 import { Request, Response, NextFunction } from 'express';
 import { uploadFile, getFiles, downloadFile, removeFile, getFileData } from '../controllers/file';
 import { upload } from '../config/multerconf';
-import { canAccessFile } from '../middlewares/fileAuth'; 
-
+import isAuthenticated from '../middlewares/isAuthenticated.middleware';
+import requestValidator from '../middlewares/requestValidator.middleware';
+import { fetchFileData } from '../middlewares/fileFetch.middleware';
 const router = express.Router();
 
-const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    res.status(401).json({ error: 'Unauthorized' });
-};
-
-router.post('/upload', isAuthenticated, upload.array('file'), uploadFile);
-router.get('/', isAuthenticated, getFiles);
-router.get('/:id/download', downloadFile);
-router.delete('/:id/delete', isAuthenticated, removeFile);
-router.get('/:id', isAuthenticated, canAccessFile, getFileData);
+router.post('/upload', isAuthenticated, upload.array('file'), uploadFile, requestValidator);
+router.get('/userfiles', isAuthenticated, getFiles, requestValidator);
+router.get('/:id/download', downloadFile, requestValidator);
+router.delete('/:id/delete', isAuthenticated, removeFile, requestValidator);
+router.get('/:id', fetchFileData ,getFileData, requestValidator);
 
 export default router;

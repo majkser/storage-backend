@@ -4,7 +4,8 @@ import fs from "fs";
 import {
   createFile,
   findById,
-  findByUserId,
+  findAllFiles,
+  findByUserAccess,
   deleteFile,
 } from "../models/file.model";
 
@@ -23,21 +24,16 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
+    
     const userId = (req.user as any).id;
-    const parentFolderId = req.body.folderId
-      ? parseInt(req.body.folderId)
-      : null;
-
+    const parentFolderId = req.body.folderId || null;
     const uploadedFiles = [];
-
-    // Safely handle different multer configurations (single or array)
     let filesToProcess: Express.Multer.File[] = [];
 
     if (req.files) {
       if (Array.isArray(req.files)) {
         filesToProcess = req.files;
       } else {
-        // Handle case where req.files is an object with arrays (fieldname → files)
         Object.keys(req.files).forEach((key) => {
           const fileArray = (
             req.files as Record<string, Express.Multer.File[]>
@@ -49,11 +45,9 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
       filesToProcess = [req.file];
     }
 
-    // Process each file
     for (const file of filesToProcess) {
-      const fileData: File = {
-        id: 0, // This will be auto-incremented by the database
-        fileName: file.filename,
+      const fileData = {
+        filename: file.filename,
         originalName: file.originalname,
         filePath: file.path,
         size: file.size,
@@ -61,13 +55,13 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
         userId: userId,
         parentFolderId: parentFolderId,
         isPublic: req.body.isPublic === "true",
-        createdAt: new Date(),
+        updatedAt: undefined,
       };
 
       const fileId = await createFile(fileData);
       uploadedFiles.push({
         id: fileId,
-        fileName: fileData.fileName,
+        filename: fileData.filename,
         originalName: fileData.originalName,
       });
     }
@@ -86,26 +80,33 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
 
 export const getFiles = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (!req.user) {
-      res.status(401).json({ error: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const isAdmin = (req as any).isAdmin;
+    console.log("User ID:", userId, "Is Admin:", isAdmin);
+    
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
       return;
     }
-    const userId = (req.user as any).id;
-    const parentFolderId = req.params.parentFolderId
-      ? parseInt(req.params.parentFolderId)
-      : null;
 
-    const files = await findByUserId(userId, parentFolderId);
+    let files: File[];
 
+    if (isAdmin) {
+      files = await findAllFiles();
+    } else {
+      files = await findByUserAccess(userId);
+    }
+    
     res.status(200).json({
       message: "Files retrieved successfully",
       files: files.map((file) => ({
         id: file.id,
-        fileName: file.fileName,
+        filename: file.filename,
         originalName: file.originalName,
         size: file.size,
         mimetype: file.mimetype,
         createdAt: file.createdAt,
+        isPublic: file.isPublic,
       })),
     });
   } catch (err) {
@@ -118,17 +119,21 @@ export const getFiles = async (req: Request, res: Response): Promise<void> => {
 
 export const getFileData = async (req: Request, res: Response): Promise<void> => {
   try {
-    // File data is already fetched and authorized by middleware
     const file = (req as any).fileData;
 
     res.status(200).json({
+      message: "File data retrieved successfully",
       id: file.id,
-      fileName: file.fileName,
+      filename: file.filename,
       originalName: file.originalName,
+      filePath: file.filePath,
       size: file.size,
       mimetype: file.mimetype,
-      createdAt: file.createdAt,
+      userId: file.userId,
+      parentFolderId: file.parentFolderId,
       isPublic: file.isPublic,
+      createdAt: file.createdAt,
+      updatedAt: file.updatedAt,
     });
   } catch (err) {
     console.error("Error fetching file data:", err);
@@ -138,22 +143,13 @@ export const getFileData = async (req: Request, res: Response): Promise<void> =>
 
 export const downloadFile = async (req: Request, res: Response): Promise<void> => {
   try {
-    const fileId = parseInt(req.params.id);
+    const fileId = req.params.id;
     const file = await findById(fileId);
 
     if (!file) {
       res.status(404).json({ error: "File not found" });
       return;
     }
-
-    //   if (
-    //     !req.user ||
-    //     ((req.user as any).id !== file.userId && !file.isPublic)
-    //   ) {
-    //     res.status(403).json({ error: "Access denied" });
-    //     return;
-    //   }
-    // comented this out bcs i need to rethink the access control to downloads logic
 
     const filePath = file.filePath;
 
@@ -171,13 +167,9 @@ export const downloadFile = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-// This method is used to delete a file from the server and database
-// I called it removeFile to avoid confusion with the deleteFile method in the model
-// which is used to delete a file from the database only
-// The removeFile method will first delete the file from the server and then delete the record from the database
 export const removeFile = async (req: Request, res: Response): Promise<void> => {
   try {
-    const fileId = parseInt(req.params.fileId);
+    const fileId = req.params.fileId;
     const file = await findById(fileId);
 
     if (!file) {
@@ -199,7 +191,13 @@ export const removeFile = async (req: Request, res: Response): Promise<void> => 
       fs.unlinkSync(filePath);
     }
 
-    await deleteFile(fileId);
+    const deleted = await deleteFile(fileId);
+    
+    if (!deleted) {
+      res.status(500).json({ error: "Failed to delete file from database" });
+      return;
+    }
+
     res.status(200).json({ message: "File deleted successfully" });
   } catch (err) {
     console.error("Error deleting file:", err);
