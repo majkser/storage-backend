@@ -14,11 +14,7 @@ router.post(
   "/generate-link",
   isAuthenticated,
   isAdmin,
-  body("fileId")
-    .toInt()
-    .notEmpty()
-    .withMessage("fileId is required")
-    .isInt({ min: 1 }),
+  body("fileId").notEmpty().isString().withMessage("fileId is required"),
   validateRequest,
   fileExistanceValidator,
   generateLink

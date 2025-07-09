@@ -5,31 +5,39 @@ CREATE TABLE users(
     usersurname VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     photo VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE files (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id VARCHAR(36) DEFAULT (UUID()) PRIMARY KEY,
     filename VARCHAR(255) NOT NULL,
-    original_name VARCHAR(255) NOT NULL,
-    file_path VARCHAR(512) NOT NULL,
+    originalName VARCHAR(255) NOT NULL,
+    filePath VARCHAR(512) NOT NULL,
     size BIGINT NOT NULL,
     mimetype VARCHAR(100) NOT NULL,
-    user_id VARCHAR(36),
-    parent_folder_id BIGINT,
-    is_public BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NULL DEFAULT NULL,
+    userId VARCHAR(36),
+    parentFolderId VARCHAR(36), 
+    isPublic BOOLEAN NOT NULL DEFAULT FALSE,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP NULL DEFAULT NULL,
     
-    FOREIGN KEY (user_id) REFERENCES users(id)
-
+    FOREIGN KEY (userId) REFERENCES users(id)
 );
 
 CREATE TABLE links (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id VARCHAR(36) DEFAULT (UUID()) PRIMARY KEY, 
     token VARCHAR(255) NOT NULL UNIQUE,
-    file_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fileId VARCHAR(36) NOT NULL, 
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (file_id) REFERENCES files(id)
+    FOREIGN KEY (fileId) REFERENCES files(id)
+);
+
+CREATE TABLE fileAccess (
+    fileId VARCHAR(36) NOT NULL, 
+    userId VARCHAR(36) NOT NULL,
+    PRIMARY KEY (fileId, userId),
+    
+    FOREIGN KEY (fileId) REFERENCES files(id),
+    FOREIGN KEY (userId) REFERENCES users(id)
 );

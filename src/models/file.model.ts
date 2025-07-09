@@ -2,31 +2,30 @@ import dbConnection from "../config/db-connection";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 
 export interface File {
-  id: number;
-  fileName: string;
+  id: string; 
+  filename: string;
   originalName: string;
   filePath: string;
   size: number;
   mimetype: string;
   userId: string;
-  parentFolderId?: number | null;
+  parentFolderId?: string | null; 
   isPublic: boolean;
   createdAt: Date;
   updatedAt?: Date;
 }
 
-export async function createFile(file: File): Promise<number> {
+export async function createFile(file: Omit<File, 'id' | 'createdAt'>): Promise<string> {
   const connection = await dbConnection.getConnection();
   try {
     const updatedAt = file.updatedAt || null;
-    const parentFolderId =
-      file.parentFolderId === undefined ? null : file.parentFolderId;
+    const parentFolderId = file.parentFolderId === undefined ? null : file.parentFolderId;
 
     const [result] = await connection.execute<ResultSetHeader>(
-      "INSERT INTO files (id, filename, original_name, file_path, size, mimetype, user_id, parent_folder_id, is_public, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      `INSERT INTO files (filename, originalName, filePath, size, mimetype, userId, parentFolderId, isPublic, updatedAt) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        file.id,
-        file.fileName,
+        file.filename,
         file.originalName,
         file.filePath,
         file.size,
@@ -34,38 +33,44 @@ export async function createFile(file: File): Promise<number> {
         file.userId,
         parentFolderId,
         file.isPublic,
-        file.createdAt,
         updatedAt,
       ]
     );
-    return result.insertId as number;
+
+    // Get the generated ID
+    const [rows] = await connection.execute<RowDataPacket[]>(
+      "SELECT id FROM files WHERE filename = ? AND userId = ? ORDER BY createdAt DESC LIMIT 1",
+      [file.filename, file.userId]
+    );
+    
+    return rows[0].id as string;
   } finally {
     connection.release();
   }
 }
 
-export async function findById(id: number): Promise<File | null> {
+export async function findById(id: string): Promise<File | null> {
   const connection = await dbConnection.getConnection();
   try {
     const [rows] = await connection.execute<RowDataPacket[]>(
       "SELECT * FROM files WHERE id = ?",
       [id]
     );
+    
     if (!rows.length) return null;
 
-    // Map snake_case DB column names to camelCase TypeScript properties
     return {
       id: rows[0].id,
-      fileName: rows[0].filename,
-      originalName: rows[0].original_name,
-      filePath: rows[0].file_path,
+      filename: rows[0].filename,
+      originalName: rows[0].originalName,
+      filePath: rows[0].filePath,
       size: rows[0].size,
       mimetype: rows[0].mimetype,
-      userId: rows[0].user_id,
-      parentFolderId: rows[0].parent_folder_id,
-      isPublic: Boolean(rows[0].is_public),
-      createdAt: rows[0].created_at,
-      updatedAt: rows[0].updated_at,
+      userId: rows[0].userId,
+      parentFolderId: rows[0].parentFolderId,
+      isPublic: Boolean(rows[0].isPublic),
+      createdAt: rows[0].createdAt,
+      updatedAt: rows[0].updatedAt,
     };
   } finally {
     connection.release();
@@ -74,44 +79,67 @@ export async function findById(id: number): Promise<File | null> {
 
 export async function findByUserId(
   userId: string,
-  parentFolderId: number | null
+  parentFolderId: string | null
 ): Promise<File[]> {
   const connection = await dbConnection.getConnection();
   try {
-    // convert snake_case to camelCase
-    let query = `
-      SELECT 
-        id,
-        filename AS fileName,
-        original_name AS originalName,
-        file_path AS filePath,
-        size,
-        mimetype,
-        user_id AS userId,
-        parent_folder_id AS parentFolderId,
-        is_public AS isPublic,
-        created_at AS createdAt
-      FROM files 
-      WHERE user_id = ?
-    `;
-    
+    let query = "SELECT * FROM files WHERE userId = ?";
     const params: any[] = [userId];
 
     if (parentFolderId === null) {
-      query += " AND parent_folder_id IS NULL";
+      query += " AND parentFolderId IS NULL";
     } else {
-      query += " AND parent_folder_id = ?";
+      query += " AND parentFolderId = ?";
       params.push(parentFolderId);
     }
 
     const [rows] = await connection.execute<RowDataPacket[]>(query, params);
-    return rows as File[];
+    
+    return rows.map(row => ({
+      ...row,
+      isPublic: Boolean(row.isPublic) // We only convert boolean since MySQL returns tinyint
+    })) as File[];
   } finally {
     connection.release();
   }
 }
 
-export async function deleteFile(id: number): Promise<boolean> {
+export async function findAllFiles(): Promise<File[]> {
+  const connection = await dbConnection.getConnection();
+  try {
+    const [rows] = await connection.execute<RowDataPacket[]>("SELECT * FROM files");
+    
+    return rows.map(row => ({
+      ...row,
+      isPublic: Boolean(row.isPublic)
+    })) as File[];
+  } finally {
+    connection.release();
+  }
+}
+
+export async function findByUserAccess(userId: string): Promise<File[]> {
+  const connection = await dbConnection.getConnection();
+  try {
+    const query = `
+      SELECT f.*
+      FROM files f
+      INNER JOIN fileAccess fa ON f.id = fa.fileId
+      WHERE fa.userId = ?
+    `;
+    
+    const [rows] = await connection.execute<RowDataPacket[]>(query, [userId]);
+    
+    return rows.map(row => ({
+      ...row,
+      isPublic: Boolean(row.isPublic)
+    })) as File[];
+  } finally {
+    connection.release();
+  }
+}
+
+export async function deleteFile(id: string): Promise<boolean> {
   const connection = await dbConnection.getConnection();
   try {
     const [result] = await connection.execute<ResultSetHeader>(
