@@ -20,3 +20,12 @@ INSERT INTO links (id, token, file_id) VALUES (1, 'test_token', 1);
 
 -- @block
 DELETE FROM links WHERE id = 11;
+
+-- @block
+SELECT * FROM files;
+
+-- @block
+SELECT * FROM users;
+
+-- @block
+SELECT * FROM fileAccess;
