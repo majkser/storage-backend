@@ -2,14 +2,14 @@ import dbConnection from "../config/db-connection";
 
 export interface Link {
   token: string;
-  fileId: number;
+  fileId: string;
 }
 
 export async function createLink(link: Link): Promise<void> {
   const connection = await dbConnection.getConnection();
   try {
     await connection.execute(
-      "INSERT INTO links (token, file_id) VALUES (?, ?)",
+      "INSERT INTO links (token, fileId) VALUES (?, ?)",
       [link.token, link.fileId]
     );
   } finally {
@@ -29,18 +29,18 @@ export async function getLinkByToken(token: string): Promise<Link | null> {
     }
     return {
       token: rows[0].token,
-      fileId: rows[0].file_id,
+      fileId: rows[0].fileId,
     } as Link;
   } finally {
     connection.release();
   }
 }
 
-export async function getLinkByFileId(fileId: number): Promise<Link | null> {
+export async function getLinkByFileId(fileId: string): Promise<Link | null> {
   const connection = await dbConnection.getConnection();
   try {
     const [rows]: [any[], any] = await connection.execute(
-      "SELECT * FROM links WHERE file_id = ?",
+      "SELECT * FROM links WHERE fileId = ?",
       [fileId]
     );
     if (rows.length === 0) {
@@ -48,7 +48,7 @@ export async function getLinkByFileId(fileId: number): Promise<Link | null> {
     }
     return {
       token: rows[0].token,
-      fileId: rows[0].file_id,
+      fileId: rows[0].fileId,
     } as Link;
   } finally {
     connection.release();
