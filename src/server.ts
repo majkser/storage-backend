@@ -8,6 +8,7 @@ import { User } from "./models/userModel";
 import fileRoutes from "./routes/file.routes";
 import authRoutes from "./routes/authRoutes";
 import linkRoutes from "./routes/linkRoutes";
+import fileAccessRoutes from "./routes/fileAccessRoutes";
 import { getUserIdByEmail } from "./controllers/userController";
 
 dotenv.config();
@@ -86,6 +87,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/files", fileRoutes);
 
 app.use("/api/link", linkRoutes);
+
+app.use("/api/file-access", fileAccessRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
