@@ -8,8 +8,12 @@ import {
   findByUserAccess,
   deleteFile,
 } from "../models/file.model";
+import { User } from "../models/userModel";
 
-export const uploadFile = async (req: Request, res: Response): Promise<void> => {
+export const uploadFile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const hasFiles =
     (req.files && (Array.isArray(req.files) ? req.files.length > 0 : true)) ||
     req.file;
@@ -24,8 +28,14 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
-    
-    const userId = (req.user as any).id;
+
+    const user = req.user as User;
+    if (!user.id) {
+      res.status(400).json({ error: "User ID is missing" });
+      return;
+    }
+
+    const userId = user.id;
     const parentFolderId = req.body.folderId || null;
     const uploadedFiles = [];
     let filesToProcess: Express.Multer.File[] = [];
@@ -80,23 +90,27 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
 
 export const getFiles = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req.user as any).id;
-    const isAdmin = (req as any).isAdmin;
-    console.log("User ID:", userId, "Is Admin:", isAdmin);
-    
-    if (!userId) {
-      res.status(400).json({ error: "User ID is required" });
+    if (!req.user) {
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
+    const user = req.user as User;
+    if (!user.id) {
+      res.status(400).json({ error: "User ID is missing" });
+      return;
+    }
+
+    const userId = user.id;
+
     let files: File[];
 
-    if (isAdmin) {
+    if (req.isAdmin === true) {
       files = await findAllFiles();
     } else {
       files = await findByUserAccess(userId);
     }
-    
+
     res.status(200).json({
       message: "Files retrieved successfully",
       files: files.map((file) => ({
@@ -117,7 +131,10 @@ export const getFiles = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const getFileData = async (req: Request, res: Response): Promise<void> => {
+export const getFileData = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const file = (req as any).fileData;
 
@@ -137,11 +154,16 @@ export const getFileData = async (req: Request, res: Response): Promise<void> =>
     });
   } catch (err) {
     console.error("Error fetching file data:", err);
-    res.status(500).json({ error: "Internal server error while fetching file data" });
+    res
+      .status(500)
+      .json({ error: "Internal server error while fetching file data" });
   }
 };
 
-export const downloadFile = async (req: Request, res: Response): Promise<void> => {
+export const downloadFile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const fileId = req.params.id;
     const file = await findById(fileId);
@@ -167,7 +189,10 @@ export const downloadFile = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-export const removeFile = async (req: Request, res: Response): Promise<void> => {
+export const removeFile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const fileId = req.params.fileId;
     const file = await findById(fileId);
@@ -179,7 +204,9 @@ export const removeFile = async (req: Request, res: Response): Promise<void> => 
 
     if (
       !req.user ||
-      ((req.user as any).id !== file.userId && !file.isPublic)
+      ((req.user as User).id !== file.userId &&
+        !file.isPublic &&
+        req.isAdmin !== true)
     ) {
       res.status(403).json({ error: "Access denied" });
       return;
@@ -192,7 +219,7 @@ export const removeFile = async (req: Request, res: Response): Promise<void> => 
     }
 
     const deleted = await deleteFile(fileId);
-    
+
     if (!deleted) {
       res.status(500).json({ error: "Failed to delete file from database" });
       return;
